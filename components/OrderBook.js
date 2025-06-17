@@ -72,10 +72,22 @@ const OrderBook = () => {
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [activeTab, setActiveTab] = useState('orderbook');
   const [showResourceSelector, setShowResourceSelector] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
 
   // Carregar dados do localStorage
   useEffect(() => {
     const savedOrders = localStorage.getItem('rivalRegionsOrders');
+    const savedBalance = localStorage.getItem('rivalRegionsBalance');
+    
+    if (savedBalance) {
+      setUserBalance(parseFloat(savedBalance));
+    } else {
+      // Saldo inicial de exemplo
+      const initialBalance = 50000.00;
+      setUserBalance(initialBalance);
+      localStorage.setItem('rivalRegionsBalance', initialBalance.toString());
+    }
+    
     if (savedOrders) {
       setOrders(JSON.parse(savedOrders));
     } else {
@@ -112,14 +124,27 @@ const OrderBook = () => {
     }
   }, [orders]);
 
+  // Salvar saldo quando mudar
+  useEffect(() => {
+    localStorage.setItem('rivalRegionsBalance', userBalance.toString());
+  }, [userBalance]);
+
   const handleCreateOrder = () => {
     if (!newOrder.price || !newOrder.quantity) return;
+
+    const orderTotal = parseFloat(newOrder.price) * parseInt(newOrder.quantity);
+    
+    // Verificar se tem saldo suficiente para ordens de compra
+    if (newOrder.type === 'buy' && orderTotal > userBalance) {
+      alert(`Saldo insuficiente! Você possui ${userBalance.toFixed(2)} RRCoin, mas precisa de ${orderTotal.toFixed(2)} RRCoin para esta ordem.`);
+      return;
+    }
 
     const order = {
       id: Date.now(),
       price: parseFloat(newOrder.price),
       quantity: parseInt(newOrder.quantity),
-      total: parseFloat(newOrder.price) * parseInt(newOrder.quantity),
+      total: orderTotal,
       user: `Player${Math.floor(Math.random() * 1000)}`
     };
 
@@ -139,6 +164,11 @@ const OrderBook = () => {
       
       return updated;
     });
+
+    // Deduzir do saldo apenas para ordens de compra
+    if (newOrder.type === 'buy') {
+      setUserBalance(prev => prev - orderTotal);
+    }
 
     setNewOrder({ type: 'buy', price: '', quantity: '', resource: selectedResource });
     setShowOrderForm(false);
@@ -195,6 +225,17 @@ const OrderBook = () => {
                   <div className="flex items-center gap-1">
                     <Activity size={12} className="text-green-400" />
                     <span className="text-xs text-green-400">LIVE</span>
+                  </div>
+                </div>
+                {/* Saldo do usuário */}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 rounded-lg px-2 py-1">
+                    <span className="text-yellow-400 text-sm">💰</span>
+                    <span className="text-xs text-yellow-300 font-medium">SALDO:</span>
+                    <span className="text-sm font-bold text-yellow-400 font-mono">
+                      {userBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-xs text-yellow-300">RRCoin</span>
                   </div>
                 </div>
               </div>
@@ -288,6 +329,31 @@ const OrderBook = () => {
         {activeTab === 'orderbook' && (
           <div className="space-y-4">
             {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Saldo destacado */}
+              <div className="col-span-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 rounded-xl p-4 backdrop-blur-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-yellow-500/20 rounded-lg">
+                      <span className="text-yellow-400 text-xl">💰</span>
+                    </div>
+                    <div>
+                      <div className="text-xs text-yellow-300 font-medium">SEU SALDO</div>
+                      <div className="text-lg font-bold text-yellow-400 font-mono">
+                        {userBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} RRCoin
+                      </div>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setUserBalance(prev => prev + 10000)}
+                    className="text-xs bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 px-3 py-1 rounded-lg border border-yellow-500/30 transition-colors"
+                  >
+                    + 10k (Demo)
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-1">
@@ -577,10 +643,25 @@ const OrderBook = () => {
 
                 {newOrder.price && newOrder.quantity && (
                   <div className="p-4 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl">
-                    <div className="text-sm text-blue-300 font-medium mb-2">Total da Ordem</div>
-                    <div className="text-2xl font-bold text-blue-400 font-mono">
-                      {(parseFloat(newOrder.price) * parseInt(newOrder.quantity || 0)).toFixed(3)}
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-sm text-blue-300 font-medium">Total da Ordem</div>
+                      <div className="text-xs text-blue-300">
+                        {newOrder.type === 'buy' ? 'Custo' : 'Receberá'}
+                      </div>
                     </div>
+                    <div className="text-2xl font-bold text-blue-400 font-mono mb-2">
+                      {(parseFloat(newOrder.price) * parseInt(newOrder.quantity || 0)).toFixed(3)} RRCoin
+                    </div>
+                    {newOrder.type === 'buy' && (
+                      <div className="text-xs text-blue-300/70">
+                        Saldo após ordem: {(userBalance - (parseFloat(newOrder.price) * parseInt(newOrder.quantity || 0))).toFixed(2)} RRCoin
+                      </div>
+                    )}
+                    {newOrder.type === 'buy' && (parseFloat(newOrder.price) * parseInt(newOrder.quantity || 0)) > userBalance && (
+                      <div className="text-xs text-red-400 mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded">
+                        ⚠️ Saldo insuficiente! Você precisa de mais RRCoin.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -588,14 +669,21 @@ const OrderBook = () => {
               <div className="mt-8">
                 <button
                   onClick={handleCreateOrder}
-                  disabled={!newOrder.price || !newOrder.quantity}
+                  disabled={!newOrder.price || !newOrder.quantity || (newOrder.type === 'buy' && (parseFloat(newOrder.price) * parseInt(newOrder.quantity || 0)) > userBalance)}
                   className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 ${
                     newOrder.type === 'buy'
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/30 disabled:opacity-50'
-                      : 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/30 disabled:opacity-50'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed'
+                      : 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed'
                   }`}
                 >
-                  {newOrder.type === 'buy' ? '🚀 CRIAR ORDEM DE COMPRA' : '💥 CRIAR ORDEM DE VENDA'}
+                  {!newOrder.price || !newOrder.quantity 
+                    ? 'PREENCHA OS CAMPOS'
+                    : newOrder.type === 'buy' && (parseFloat(newOrder.price) * parseInt(newOrder.quantity || 0)) > userBalance
+                    ? '💰 SALDO INSUFICIENTE'
+                    : newOrder.type === 'buy' 
+                    ? '🚀 CRIAR ORDEM DE COMPRA' 
+                    : '💥 CRIAR ORDEM DE VENDA'
+                  }
                 </button>
               </div>
             </div>
