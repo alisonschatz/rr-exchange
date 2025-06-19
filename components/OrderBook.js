@@ -12,8 +12,6 @@ const OrderBook = () => {
   const [userBalance, setUserBalance] = useState(0);
   const [userInventory, setUserInventory] = useState({});
   
-  // Estado do formulário - removido showOrderForm e newOrder
-
   // Inicialização dos dados
   useEffect(() => {
     loadDataFromStorage();
@@ -96,11 +94,8 @@ const OrderBook = () => {
     return RESOURCES.find(r => r.id === selectedResource);
   };
 
-  // Validar se pode criar ordem - função removida
-  // Criar nova ordem - função removida
-
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen text-gray-100" style={{ backgroundColor: '#3c3c3c' }}>
       {/* Header com navegação */}
       <Header 
         currentResource={getCurrentResource()}

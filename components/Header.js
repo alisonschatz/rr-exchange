@@ -14,12 +14,12 @@ const Header = ({
   };
 
   return (
-    <div className="bg-gray-800 border-b-2 border-gray-600 sticky top-0 z-40" style={{ borderColor: '#4a5568' }}>
+    <div className="border-b-2 sticky top-0 z-40" style={{ backgroundColor: '#2a2a2a', borderColor: '#555555' }}>
       {/* Saldo no Topo - Estilo RR */}
-      <div className="bg-gray-900 border-b-2 border-gray-500 px-4 py-3">
+      <div className="border-b-2 px-4 py-3" style={{ backgroundColor: '#1f1f1f', borderColor: '#444444' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-green-400 flex items-center justify-center" style={{ backgroundColor: '#2d3748', borderColor: '#38a169' }}>
+            <div className="w-6 h-6 border-2 border-green-400 flex items-center justify-center" style={{ backgroundColor: '#2a2a2a', borderColor: '#38a169' }}>
               <span className="text-green-400 text-sm font-bold">$</span>
             </div>
             <div>
@@ -40,12 +40,15 @@ const Header = ({
       </div>
 
       {/* Grid de Recursos - Estilo RR */}
-      <div className="border-b-2 border-gray-500">
-        <div className="bg-gradient-to-r from-gray-700 to-gray-600 border-b-2 border-gray-500 px-4 py-2">
+      <div className="border-b-2" style={{ borderColor: '#444444' }}>
+        <div className="border-b-2 px-4 py-2" style={{ 
+          backgroundImage: 'linear-gradient(to right, #333333, #2a2a2a)', 
+          borderColor: '#444444' 
+        }}>
           <div className="text-gray-200 font-bold text-sm tracking-wide">RECURSOS:</div>
         </div>
         
-        <div className="p-3 bg-gray-800">
+        <div className="p-3" style={{ backgroundColor: '#2a2a2a' }}>
           <div className="grid grid-cols-3 gap-2">
             {RESOURCES.map(resource => {
               const bestPrice = getBestPrice(resource.id, 'sell');
@@ -58,13 +61,14 @@ const Header = ({
                   onClick={() => setSelectedResource(resource.id)}
                   className="p-2 text-left transition-colors border-2"
                   style={{ 
-                    backgroundColor: isActive ? '#2d3748' : '#2d3748',
-                    borderColor: isActive ? '#38a169' : '#3182ce'
+                    backgroundColor: isActive ? '#404040' : '#2a2a2a',
+                    borderColor: isActive ? '#38a169' : '#555555',
+                    ':hover': { backgroundColor: '#333333' }
                   }}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">{resource.icon}</span>
-                    <div className={`text-xs font-bold uppercase tracking-wide ${isActive ? 'text-white' : 'text-white'}`}>
+                    <div className={`text-xs font-bold uppercase tracking-wide ${isActive ? 'text-white' : 'text-gray-200'}`}>
                       {resource.symbol}
                     </div>
                     {isActive && (
@@ -80,7 +84,7 @@ const Header = ({
                         {bestPrice.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} $
                       </div>
                     ) : (
-                      <div className="text-xs text-gray-400">--</div>
+                      <div className="text-xs text-gray-500">--</div>
                     )}
                     
                     <div className="text-xs text-blue-300 font-medium">
@@ -101,8 +105,9 @@ const Header = ({
             onClick={() => setActiveTab('orderbook')}
             className="w-full py-3 px-4 text-sm font-bold uppercase tracking-wide"
             style={{ 
-              backgroundColor: '#2d3748',
-              color: '#38a169'
+              backgroundColor: '#2a2a2a',
+              color: '#38a169',
+              borderTop: '2px solid #38a169'
             }}
           >
             Order Book
