@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { RESOURCES, INITIAL_ORDERS, INITIAL_BALANCE } from '../constants/resources';
 import Header from './Header';
-import OrderForm from './OrderForm';
 import OrderBookTab from './OrderBookTab';
-import InventoryTab from './InventoryTab';
 
 const OrderBook = () => {
   // Estados principais
@@ -13,16 +11,8 @@ const OrderBook = () => {
   const [orders, setOrders] = useState({});
   const [userBalance, setUserBalance] = useState(0);
   const [userInventory, setUserInventory] = useState({});
-  const [activeTab, setActiveTab] = useState('orderbook');
-  const [showOrderForm, setShowOrderForm] = useState(false);
   
-  // Estado do formulário
-  const [newOrder, setNewOrder] = useState({
-    type: 'buy',
-    price: '',
-    quantity: '',
-    resource: 'gold'
-  });
+  // Estado do formulário - removido showOrderForm e newOrder
 
   // Inicialização dos dados
   useEffect(() => {
@@ -106,99 +96,8 @@ const OrderBook = () => {
     return RESOURCES.find(r => r.id === selectedResource);
   };
 
-  // Validar se pode criar ordem
-  const canCreateOrder = () => {
-    if (!newOrder.price || !newOrder.quantity) return false;
-
-    const orderTotal = parseFloat(newOrder.price) * parseInt(newOrder.quantity);
-    const quantity = parseInt(newOrder.quantity);
-
-    if (newOrder.type === 'buy') {
-      return orderTotal <= userBalance;
-    } else {
-      return quantity <= (userInventory[newOrder.resource] || 0);
-    }
-  };
-
-  // Criar nova ordem
-  const handleCreateOrder = () => {
-    if (!newOrder.price || !newOrder.quantity) {
-      alert('Preencha todos os campos!');
-      return;
-    }
-
-    const orderTotal = parseFloat(newOrder.price) * parseInt(newOrder.quantity);
-    const quantity = parseInt(newOrder.quantity);
-
-    // Validações
-    if (newOrder.type === 'buy' && orderTotal > userBalance) {
-      alert(`Saldo insuficiente! Você tem ${userBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} $ mas precisa de ${orderTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} $`);
-      return;
-    }
-
-    if (newOrder.type === 'sell') {
-      const available = userInventory[newOrder.resource] || 0;
-      if (quantity > available) {
-        alert(`Recursos insuficientes! Você tem ${available.toLocaleString()} ${newOrder.resource.toUpperCase()} mas precisa de ${quantity.toLocaleString()}`);
-        return;
-      }
-    }
-
-    // Criar ordem
-    const order = {
-      id: Date.now(),
-      price: parseFloat(newOrder.price),
-      quantity: quantity,
-      total: orderTotal,
-      user: `Player${Math.floor(Math.random() * 1000)}`
-    };
-
-    // Adicionar ordem ao book
-    setOrders(prev => {
-      const updated = { ...prev };
-      
-      if (!updated[newOrder.resource]) {
-        updated[newOrder.resource] = { buy: [], sell: [] };
-      }
-      
-      updated[newOrder.resource][newOrder.type].push(order);
-      
-      // Ordenar ordens
-      if (newOrder.type === 'buy') {
-        updated[newOrder.resource].buy.sort((a, b) => b.price - a.price);
-      } else {
-        updated[newOrder.resource].sell.sort((a, b) => a.price - b.price);
-      }
-      
-      return updated;
-    });
-
-    // Atualizar saldo e inventário
-    if (newOrder.type === 'buy') {
-      // Compra: reduzir dinheiro, aumentar recursos
-      setUserBalance(prev => prev - orderTotal);
-      setUserInventory(prev => ({
-        ...prev,
-        [newOrder.resource]: (prev[newOrder.resource] || 0) + quantity
-      }));
-    } else {
-      // Venda: aumentar dinheiro, reduzir recursos
-      setUserBalance(prev => prev + orderTotal);
-      setUserInventory(prev => ({
-        ...prev,
-        [newOrder.resource]: (prev[newOrder.resource] || 0) - quantity
-      }));
-    }
-
-    // Limpar formulário
-    setNewOrder({
-      type: 'buy',
-      price: '',
-      quantity: '',
-      resource: selectedResource
-    });
-    setShowOrderForm(false);
-  };
+  // Validar se pode criar ordem - função removida
+  // Criar nova ordem - função removida
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -210,50 +109,23 @@ const OrderBook = () => {
         setSelectedResource={setSelectedResource}
         orders={orders}
         getBestPrice={getBestPrice}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
       />
 
-      {/* Conteúdo principal */}
+      {/* Conteúdo principal - sempre OrderBook */}
       <div className="p-4">
-        {activeTab === 'orderbook' && (
-          <OrderBookTab 
-            selectedResource={selectedResource}
-            currentResource={getCurrentResource()}
-            userBalance={userBalance}
-            setUserBalance={setUserBalance}
-            orders={orders}
-            getResourceData={getResourceData}
-            getBestPrice={getBestPrice}
-            getSpread={getSpread}
-            userInventory={userInventory}
-            setUserInventory={setUserInventory}
-          />
-        )}
-
-        {activeTab === 'summary' && (
-          <InventoryTab 
-            userInventory={userInventory}
-            setUserInventory={setUserInventory}
-            selectedResource={selectedResource}
-            setSelectedResource={setSelectedResource}
-            setActiveTab={setActiveTab}
-            getBestPrice={getBestPrice}
-          />
-        )}
+        <OrderBookTab 
+          selectedResource={selectedResource}
+          currentResource={getCurrentResource()}
+          userBalance={userBalance}
+          setUserBalance={setUserBalance}
+          orders={orders}
+          getResourceData={getResourceData}
+          getBestPrice={getBestPrice}
+          getSpread={getSpread}
+          userInventory={userInventory}
+          setUserInventory={setUserInventory}
+        />
       </div>
-
-      {/* Modal de criação de ordem */}
-      <OrderForm 
-        showOrderForm={showOrderForm}
-        setShowOrderForm={setShowOrderForm}
-        newOrder={newOrder}
-        setNewOrder={setNewOrder}
-        handleCreateOrder={handleCreateOrder}
-        getBestPrice={getBestPrice}
-        userBalance={userBalance}
-        userInventory={userInventory}
-      />
     </div>
   );
 };
